@@ -16,28 +16,28 @@
 
 class CGrabDemoDlg : public CDialog, public CImageExWndEventHandler
 {
-// Construction
+	// Construction
 public:
 	CGrabDemoDlg(CWnd* pParent = NULL);	// standard constructor
 
 	BOOL CreateObjects();
 	BOOL DestroyObjects();
 	void UpdateMenu();
-	static void XferCallback(SapXferCallbackInfo *pInfo);
-	static void SignalCallback(SapAcqCallbackInfo *pInfo);
-   void GetSignalStatus();
-   void GetSignalStatus(SapAcquisition::SignalStatus signalStatus);
-   void PixelChanged(int x, int y);
+	static void XferCallback(SapXferCallbackInfo* pInfo);
+	static void SignalCallback(SapAcqCallbackInfo* pInfo);
+	void GetSignalStatus();
+	void GetSignalStatus(SapAcquisition::SignalStatus signalStatus);
+	void PixelChanged(int x, int y);
 
-// Dialog Data
-	//{{AFX_DATA(CGrabDemoDlg)
+	// Dialog Data
+		//{{AFX_DATA(CGrabDemoDlg)
 	enum { IDD = IDD_GRABDEMO_DIALOG };
 	CStatic	m_statusWnd;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CGrabDemoDlg)
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 	//}}AFX_VIRTUAL
 
@@ -47,43 +47,17 @@ protected:
 	CString  m_appTitle;
 
 	CImageExWnd		m_ImageWnd;
-	SapAcquisition	*m_Acq;
-	SapBuffer		*m_Buffers;
-	SapTransfer		*m_Xfer;
-	SapView        *m_View;
+	SapAcquisition* m_Acq;
+	SapBuffer* m_Buffers;
+	SapTransfer* m_Xfer;
+	SapView* m_View;
 
-	// ==========================================
-	// 【终极版】多线程环形缓冲变量
-	// ==========================================
-	// 1. 二级缓存池定义
-	#define POOL_FRAME_COUNT  2000    // 在内存里再开2000帧的空间（约22GB）
-	BYTE** m_pMemPool;                // 指针数组，存放每帧数据的内存地址
-	int    m_iHead;                   // 生产者索引（写）
-	int    m_iTail;                   // 消费者索引（读）
-	int    m_nPoolLoad;               // 当前池子里积压了多少帧
+	BOOL m_IsSignalDetected;   // TRUE if camera signal is detected
 
-	// 2. 线程同步工具
-	HANDLE m_hWorkerThread;           // 后台写盘线程
-	HANDLE m_hStopEvent;              // 停止信号
-	HANDLE m_hDataAvailableEvent;     // "有新数据"信号
-	CRITICAL_SECTION m_csPool;        // 锁
-
-	// 3. 文件句柄 (改用 Windows 原生句柄以支持无缓冲IO)
-	HANDLE m_hFileRaw;
-
-	// 4. 线程函数
-	static DWORD WINAPI WriteThreadEntry(LPVOID pParam);
-	void WriteThreadLoop();
-
-    BOOL m_IsSignalDetected;   // TRUE if camera signal is detected
-
-   // =========================================================
-   // 【严谨修改版】新增成员变量
-   // =========================================================
-    FILE* m_fpRaw;             // 文件句柄
-    char* m_pBigIOBuffer;      // 128MB 的文件写入缓冲区
-    BOOL    m_bIsRecording;      // 录制状态锁
-    __int64 m_nFramesRecorded;   // 已录制帧数 (用int64防止溢出)
+	// 【新增部分：流盘变量】
+	FILE* m_fpRaw;             // 文件指针
+	BOOL  m_bIsRecording;      // 是否正在录制
+	int   m_nFramesRecorded;   // 已录制帧数
 
 	// Generated message map functions
 	//{{AFX_MSG(CGrabDemoDlg)
@@ -101,15 +75,15 @@ protected:
 	afx_msg void OnLineScanOptions();
 	afx_msg void OnCompositeOptions();
 	afx_msg void OnLoadAcqConfig();
-   afx_msg void OnImageFilterOptions();
+	afx_msg void OnImageFilterOptions();
 	afx_msg void OnBufferOptions();
 	afx_msg void OnViewOptions();
 	afx_msg void OnFileLoad();
 	afx_msg void OnFileNew();
 	afx_msg void OnFileSave();
 	afx_msg void OnExit();
-   afx_msg void OnEndSession(BOOL bEnding);
-   afx_msg BOOL OnQueryEndSession();
+	afx_msg void OnEndSession(BOOL bEnding);
+	afx_msg BOOL OnQueryEndSession();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

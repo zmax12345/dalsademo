@@ -17,114 +17,104 @@ static char THIS_FILE[] = __FILE__;
 class CAboutDlg : public CDialog
 {
 public:
-   CAboutDlg();
+    CAboutDlg();
 
-   // Dialog Data
-   //{{AFX_DATA(CAboutDlg)
-   enum { IDD = IDD_ABOUTBOX };
-   //}}AFX_DATA
+    // Dialog Data
+    //{{AFX_DATA(CAboutDlg)
+    enum { IDD = IDD_ABOUTBOX };
+    //}}AFX_DATA
 
-   // ClassWizard generated virtual function overrides
-   //{{AFX_VIRTUAL(CAboutDlg)
+    // ClassWizard generated virtual function overrides
+    //{{AFX_VIRTUAL(CAboutDlg)
 protected:
-   virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-   //}}AFX_VIRTUAL
+    virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+    //}}AFX_VIRTUAL
 
-   // Implementation
+    // Implementation
 protected:
-   //{{AFX_MSG(CAboutDlg)
-   //}}AFX_MSG
-   DECLARE_MESSAGE_MAP()
+    //{{AFX_MSG(CAboutDlg)
+    //}}AFX_MSG
+    DECLARE_MESSAGE_MAP()
 };
 
 CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
 {
-   //{{AFX_DATA_INIT(CAboutDlg)
-   //}}AFX_DATA_INIT
+    //{{AFX_DATA_INIT(CAboutDlg)
+    //}}AFX_DATA_INIT
 }
 
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
-   CDialog::DoDataExchange(pDX);
-   //{{AFX_DATA_MAP(CAboutDlg)
-   //}}AFX_DATA_MAP
+    CDialog::DoDataExchange(pDX);
+    //{{AFX_DATA_MAP(CAboutDlg)
+    //}}AFX_DATA_MAP
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
-   //{{AFX_MSG_MAP(CAboutDlg)
-   // No message handlers
-   //}}AFX_MSG_MAP
+    //{{AFX_MSG_MAP(CAboutDlg)
+    // No message handlers
+    //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CGrabDemoDlg dialog
 
 CGrabDemoDlg::CGrabDemoDlg(CWnd* pParent /*=NULL*/)
-   : CDialog(CGrabDemoDlg::IDD, pParent)
+    : CDialog(CGrabDemoDlg::IDD, pParent)
 {
-   //{{AFX_DATA_INIT(CGrabDemoDlg)
-   // NOTE: the ClassWizard will add member initialization here
-   //}}AFX_DATA_INIT
-   // Note that LoadIcon does not require a subsequent DestroyIcon in Win32
-   m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+    //{{AFX_DATA_INIT(CGrabDemoDlg)
+    // NOTE: the ClassWizard will add member initialization here
+    //}}AFX_DATA_INIT
+    // Note that LoadIcon does not require a subsequent DestroyIcon in Win32
+    m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
-   m_Acq					= NULL;
-   m_Buffers			= NULL;
-   m_Xfer				= NULL;
-   m_View            = NULL;
+    m_Acq = NULL;
+    m_Buffers = NULL;
+    m_Xfer = NULL;
+    m_View = NULL;
 
-   m_IsSignalDetected = TRUE;
+    m_IsSignalDetected = TRUE;
 
-   // 【新增初始化】必须置空，否则会报错
-   m_fpRaw = NULL;
-   m_pBigIOBuffer = NULL;
-   m_bIsRecording = FALSE;
-   m_nFramesRecorded = 0;
-   m_pMemPool = NULL;
-   m_hWorkerThread = NULL;
-   m_hFileRaw = INVALID_HANDLE_VALUE;
-   InitializeCriticalSection(&m_csPool); // 初始化锁
-}
-
-CGrabDemoDlg::~CGrabDemoDlg()
-{
-    DeleteCriticalSection(&m_csPool); // 删除锁
+    // 【新增初始化】
+    m_fpRaw = NULL;
+    m_bIsRecording = FALSE;
+    m_nFramesRecorded = 0;
 }
 
 void CGrabDemoDlg::DoDataExchange(CDataExchange* pDX)
 {
-   CDialog::DoDataExchange(pDX);
-   //{{AFX_DATA_MAP(CGrabDemoDlg)
-   DDX_Control(pDX, IDC_STATUS, m_statusWnd);
-   DDX_Control(pDX, IDC_VIEW_WND, m_ImageWnd);
-   //}}AFX_DATA_MAP
+    CDialog::DoDataExchange(pDX);
+    //{{AFX_DATA_MAP(CGrabDemoDlg)
+    DDX_Control(pDX, IDC_STATUS, m_statusWnd);
+    DDX_Control(pDX, IDC_VIEW_WND, m_ImageWnd);
+    //}}AFX_DATA_MAP
 }
 
 BEGIN_MESSAGE_MAP(CGrabDemoDlg, CDialog)
-   //{{AFX_MSG_MAP(CGrabDemoDlg)
-   ON_WM_SYSCOMMAND()
-   ON_WM_PAINT()
-   ON_WM_QUERYDRAGICON()
-   ON_WM_DESTROY()
-   ON_WM_SIZE()
-   ON_BN_CLICKED(IDC_SNAP, OnSnap)
-   ON_BN_CLICKED(IDC_GRAB, OnGrab)
-   ON_BN_CLICKED(IDC_FREEZE, OnFreeze)
-   ON_BN_CLICKED(IDC_GENERAL_OPTIONS, OnGeneralOptions)
-   ON_BN_CLICKED(IDC_AREA_SCAN_OPTIONS, OnAreaScanOptions)
-   ON_BN_CLICKED(IDC_LINE_SCAN_OPTIONS, OnLineScanOptions)
-   ON_BN_CLICKED(IDC_COMPOSITE_OPTIONS, OnCompositeOptions)
-   ON_BN_CLICKED(IDC_LOAD_ACQ_CONFIG, OnLoadAcqConfig)
-   ON_BN_CLICKED(IDC_IMAGE_FILTER_OPTIONS, OnImageFilterOptions)
-   ON_BN_CLICKED(IDC_BUFFER_OPTIONS, OnBufferOptions)
-   ON_BN_CLICKED(IDC_VIEW_OPTIONS, OnViewOptions)
-   ON_BN_CLICKED(IDC_FILE_LOAD, OnFileLoad)
-   ON_BN_CLICKED(IDC_FILE_NEW, OnFileNew)
-   ON_BN_CLICKED(IDC_FILE_SAVE, OnFileSave)
-   ON_BN_CLICKED(IDC_EXIT, OnExit)
-   ON_WM_ENDSESSION()
-   ON_WM_QUERYENDSESSION()
-   //}}AFX_MSG_MAP
+    //{{AFX_MSG_MAP(CGrabDemoDlg)
+    ON_WM_SYSCOMMAND()
+    ON_WM_PAINT()
+    ON_WM_QUERYDRAGICON()
+    ON_WM_DESTROY()
+    ON_WM_SIZE()
+    ON_BN_CLICKED(IDC_SNAP, OnSnap)
+    ON_BN_CLICKED(IDC_GRAB, OnGrab)
+    ON_BN_CLICKED(IDC_FREEZE, OnFreeze)
+    ON_BN_CLICKED(IDC_GENERAL_OPTIONS, OnGeneralOptions)
+    ON_BN_CLICKED(IDC_AREA_SCAN_OPTIONS, OnAreaScanOptions)
+    ON_BN_CLICKED(IDC_LINE_SCAN_OPTIONS, OnLineScanOptions)
+    ON_BN_CLICKED(IDC_COMPOSITE_OPTIONS, OnCompositeOptions)
+    ON_BN_CLICKED(IDC_LOAD_ACQ_CONFIG, OnLoadAcqConfig)
+    ON_BN_CLICKED(IDC_IMAGE_FILTER_OPTIONS, OnImageFilterOptions)
+    ON_BN_CLICKED(IDC_BUFFER_OPTIONS, OnBufferOptions)
+    ON_BN_CLICKED(IDC_VIEW_OPTIONS, OnViewOptions)
+    ON_BN_CLICKED(IDC_FILE_LOAD, OnFileLoad)
+    ON_BN_CLICKED(IDC_FILE_NEW, OnFileNew)
+    ON_BN_CLICKED(IDC_FILE_SAVE, OnFileSave)
+    ON_BN_CLICKED(IDC_EXIT, OnExit)
+    ON_WM_ENDSESSION()
+    ON_WM_QUERYENDSESSION()
+    //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -134,106 +124,66 @@ void CGrabDemoDlg::XferCallback(SapXferCallbackInfo* pInfo)
 {
     CGrabDemoDlg* pDlg = (CGrabDemoDlg*)pInfo->GetContext();
 
-    // 1. 检查 Trash (如果这行代码触发，说明内存拷贝都来不及了，通常不会)
-    if (pInfo->IsTrash()) {
-        CString str; str.Format(_T("TRASH ERROR: %d"), pInfo->GetEventCount());
-        pDlg->m_statusWnd.SetWindowText(str);
-        return;
-    }
-
-    if (!pDlg->m_bIsRecording) return;
-
-    // 2. 极速拷贝 (Copy)
-    EnterCriticalSection(&pDlg->m_csPool);
-
-    // 如果池子没满，就拷贝
-    if (pDlg->m_nPoolLoad < POOL_FRAME_COUNT)
+    // If grabbing in trash buffer, do not display the image, update the
+    // appropriate number of frames on the status bar instead
+    if (pInfo->IsTrash())
     {
-        void* pSrc = NULL;
-        pDlg->m_Buffers->GetAddress(pDlg->m_Buffers->GetIndex(), &pSrc);
-        int size = pDlg->m_Buffers->GetWidth() * pDlg->m_Buffers->GetHeight();
-
-        // 【关键】memcpy 速度极快 (20GB/s+)，瞬间完成
-        memcpy(pDlg->m_pMemPool[pDlg->m_iHead], pSrc, size);
-
-        // 移动指针
-        pDlg->m_iHead = (pDlg->m_iHead + 1) % POOL_FRAME_COUNT;
-        pDlg->m_nPoolLoad++;
-
-        // 3. 通知后台线程 "来活了"
-        SetEvent(pDlg->m_hDataAvailableEvent);
+        CString str;
+        str.Format(_T("Frames acquired in trash buffer: %d"), pInfo->GetEventCount());
+        pDlg->m_statusWnd.SetWindowText(str);
     }
+
+    // Refresh view
     else
     {
-        // 池子满了！说明 SSD 写太慢，内存已经爆了
-        // 这里我们选择丢弃这一帧，保命要紧
-        // 实际上这里就是你看到的 "十几秒后开始丢帧" 的软件表现
+        pDlg->m_View->Show();
+        // 【新增：高速写入硬盘逻辑】
+        if (pDlg->m_bIsRecording && pDlg->m_fpRaw)
+        {
+            // 1. 获取图像尺寸 (宽 * 高 * 字节数)
+            int width = pDlg->m_Buffers->GetWidth();
+            int height = pDlg->m_Buffers->GetHeight();
+            int bytesPerPixel = pDlg->m_Buffers->GetBytesPerPixel();
+            int size = width * height * bytesPerPixel;
+
+            // 2. 获取当前帧的数据指针
+            void* pData = NULL;
+            int bufIndex = pDlg->m_Buffers->GetIndex(); // 获取当前最新的缓冲区索引
+            pDlg->m_Buffers->GetAddress(bufIndex, &pData);
+
+            // 3. 写入硬盘
+            if (pData != NULL)
+            {
+                size_t written = fwrite(pData, 1, size, pDlg->m_fpRaw);
+                if (written == size)
+                {
+                    pDlg->m_nFramesRecorded++;
+
+                    // (可选) 更新状态栏显示录制进度
+                    // 注意：频繁更新界面会降低性能，这里每100帧更新一次
+                    if (pDlg->m_nFramesRecorded % 100 == 0)
+                    {
+                        CString strStatus;
+                        strStatus.Format(_T("Recording... %d frames"), pDlg->m_nFramesRecorded);
+                        pDlg->m_statusWnd.SetWindowText(strStatus);
+                    }
+                }
+            }
+        }
     }
-
-    LeaveCriticalSection(&pDlg->m_csPool);
-
-    // 4. 函数结束，自动 Return
-    // Sapera 采集卡此时立刻收到了 "释放" 信号，可以去采下一帧了
 }
 
-void CGrabDemoDlg::SignalCallback(SapAcqCallbackInfo *pInfo)
+void CGrabDemoDlg::SignalCallback(SapAcqCallbackInfo* pInfo)
 {
-   CGrabDemoDlg *pDlg = (CGrabDemoDlg *) pInfo->GetContext();
-   pDlg->GetSignalStatus(pInfo->GetSignalStatus());
+    CGrabDemoDlg* pDlg = (CGrabDemoDlg*)pInfo->GetContext();
+    pDlg->GetSignalStatus(pInfo->GetSignalStatus());
 }
 
 void CGrabDemoDlg::PixelChanged(int x, int y)
 {
-   CString str = m_appTitle;
-   str += "  " + m_ImageWnd.GetPixelString(CPoint(x, y));
-   SetWindowText(str);
-}
-
-DWORD WINAPI CGrabDemoDlg::WriteThreadEntry(LPVOID pParam)
-{
-    ((CGrabDemoDlg*)pParam)->WriteThreadLoop();
-    return 0;
-}
-
-void CGrabDemoDlg::WriteThreadLoop()
-{
-    // 获取单帧大小
-    int frameSize = m_Buffers->GetWidth() * m_Buffers->GetHeight();
-    DWORD dwWritten;
-
-    while (WaitForSingleObject(m_hStopEvent, 0) != WAIT_OBJECT_0)
-    {
-        // 等待有数据，或者 1秒超时
-        WaitForSingleObject(m_hDataAvailableEvent, 1000);
-
-        while (true)
-        {
-            BYTE* pDataToWrite = NULL;
-
-            // 取出一帧数据
-            EnterCriticalSection(&m_csPool);
-            if (m_nPoolLoad > 0)
-            {
-                pDataToWrite = m_pMemPool[m_iTail];
-            }
-            LeaveCriticalSection(&m_csPool);
-
-            if (pDataToWrite == NULL) break; // 没数据了，休息去
-
-            // 【核心】写入硬盘
-            // 这里的卡顿完全不影响 XferCallback
-            // 我们要求写入必须对齐 (Sector Aligned)，因为用了 NO_BUFFERING
-            // 但 WriteFile 会自动处理大部分对齐，只要 Buffer 是 VirtualAlloc 的
-            WriteFile(m_hFileRaw, pDataToWrite, frameSize, &dwWritten, NULL);
-
-            // 更新状态
-            EnterCriticalSection(&m_csPool);
-            m_iTail = (m_iTail + 1) % POOL_FRAME_COUNT;
-            m_nPoolLoad--;
-            m_nFramesRecorded++;
-            LeaveCriticalSection(&m_csPool);
-        }
-    }
+    CString str = m_appTitle;
+    str += "  " + m_ImageWnd.GetPixelString(CPoint(x, y));
+    SetWindowText(str);
 }
 
 //***********************************************************************************
@@ -241,148 +191,130 @@ void CGrabDemoDlg::WriteThreadLoop()
 //***********************************************************************************
 BOOL CGrabDemoDlg::OnInitDialog()
 {
-   CRect rect;
+    CRect rect;
 
-   CDialog::OnInitDialog();
+    CDialog::OnInitDialog();
 
-   // Add "About..." menu item to system menu.
+    // Add "About..." menu item to system menu.
 
-   // IDM_ABOUTBOX must be in the system command range.
-   ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
-   ASSERT(IDM_ABOUTBOX < 0xF000);
+    // IDM_ABOUTBOX must be in the system command range.
+    ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+    ASSERT(IDM_ABOUTBOX < 0xF000);
 
-   CMenu* pSysMenu = GetSystemMenu(FALSE);
-   if (pSysMenu != NULL)
-   {
-      CString strAboutMenu;
-      strAboutMenu.LoadString(IDS_ABOUTBOX);
-      if (!strAboutMenu.IsEmpty())
-      {
-         pSysMenu->AppendMenu(MF_SEPARATOR);
-         pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
-      }
+    CMenu* pSysMenu = GetSystemMenu(FALSE);
+    if (pSysMenu != NULL)
+    {
+        CString strAboutMenu;
+        strAboutMenu.LoadString(IDS_ABOUTBOX);
+        if (!strAboutMenu.IsEmpty())
+        {
+            pSysMenu->AppendMenu(MF_SEPARATOR);
+            pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+        }
 
-      pSysMenu->EnableMenuItem(SC_MAXIMIZE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-      pSysMenu->EnableMenuItem(SC_SIZE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-   }
+        pSysMenu->EnableMenuItem(SC_MAXIMIZE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+        pSysMenu->EnableMenuItem(SC_SIZE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+    }
 
-   // Set the icon for this dialog.  The framework does this automatically
-   //  when the application's main window is not a dialog
-   SetIcon(m_hIcon, FALSE);	// Set small icon
-   SetIcon(m_hIcon, TRUE);		// Set big icon
+    // Set the icon for this dialog.  The framework does this automatically
+    //  when the application's main window is not a dialog
+    SetIcon(m_hIcon, FALSE);	// Set small icon
+    SetIcon(m_hIcon, TRUE);		// Set big icon
 
-   // Initialize variables
-   GetWindowText(m_appTitle);
+    // Initialize variables
+    GetWindowText(m_appTitle);
 
-   // Are we operating on-line?
-   CAcqConfigDlg dlg(this, NULL);
-   {
-       m_Acq = new SapAcquisition(dlg.GetAcquisition());
+    // Are we operating on-line?
+    CAcqConfigDlg dlg(this, NULL);
+    if (dlg.DoModal() == IDOK)
+    {
+        // Define on-line objects
+        m_Acq = new SapAcquisition(dlg.GetAcquisition());
+        m_Buffers = new SapBufferWithTrash(2000, m_Acq);
+        m_Xfer = new SapAcqToBuf(m_Acq, m_Buffers, XferCallback, this);
+    }
+    else
+    {
+        // Define off-line objects
+        m_Buffers = new SapBuffer();
+    }
 
-       // 采集卡Buffer：只需要很小，因为我们马上就会拷贝走
-       m_Buffers = new SapBufferWithTrash(50, m_Acq);
-       m_Xfer = new SapAcqToBuf(m_Acq, m_Buffers, XferCallback, this);
+    // Define other objects
+    m_View = new SapView(m_Buffers);
 
-       // =================================================
-       // 【核心】申请 22GB 的用户态内存池
-       // =================================================
-       int width = m_Buffers->GetWidth();
-       int height = m_Buffers->GetHeight();
-       int frameSize = width * height; // 8-bit
+    // Attach sapview to image viewer
+    m_ImageWnd.AttachSapView(m_View);
 
-       m_pMemPool = new BYTE * [POOL_FRAME_COUNT];
-       for (int i = 0; i < POOL_FRAME_COUNT; i++)
-       {
-           // VirtualAlloc 比 new 更适合大内存申请，且内存对齐
-           m_pMemPool[i] = (BYTE*)VirtualAlloc(NULL, frameSize, MEM_COMMIT, PAGE_READWRITE);
-       }
+    // Create all objects
+    if (!CreateObjects()) { EndDialog(TRUE); return FALSE; }
 
-       m_iHead = 0;
-       m_iTail = 0;
-       m_nPoolLoad = 0;
-   }
-   else
-   {
-       // Off-line objects
-       m_Buffers = new SapBuffer();
-   }
+    m_ImageWnd.AttachEventHandler(this);
+    m_ImageWnd.CenterImage(true);
+    m_ImageWnd.Reset();
 
-   // Define other objects
-   m_View = new SapView( m_Buffers);
+    UpdateMenu();
 
-   // Attach sapview to image viewer
-   m_ImageWnd.AttachSapView(m_View);
+    // Get current input signal connection status
+    GetSignalStatus();
 
-   // Create all objects
-   if (!CreateObjects()) { EndDialog(TRUE); return FALSE; }
-
-   m_ImageWnd.AttachEventHandler(this);
-   m_ImageWnd.CenterImage(true);
-   m_ImageWnd.Reset(); 
-   
-   UpdateMenu();
-
-   // Get current input signal connection status
-   GetSignalStatus();
-
-   return TRUE;  // return TRUE  unless you set the focus to a control
+    return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
 BOOL CGrabDemoDlg::CreateObjects()
 {
-   CWaitCursor wait;
+    CWaitCursor wait;
 
-   // Create acquisition object
-   if (m_Acq && !*m_Acq && !m_Acq->Create())
-   {
-      DestroyObjects();
-      return FALSE;
-   }
+    // Create acquisition object
+    if (m_Acq && !*m_Acq && !m_Acq->Create())
+    {
+        DestroyObjects();
+        return FALSE;
+    }
 
-   // Create buffer object
-   if (m_Buffers && !*m_Buffers)
-   {
-      if( !m_Buffers->Create())
-      {
-         DestroyObjects();
-         return FALSE;
-      }
-      // Clear all buffers
-      m_Buffers->Clear();
-   }
+    // Create buffer object
+    if (m_Buffers && !*m_Buffers)
+    {
+        if (!m_Buffers->Create())
+        {
+            DestroyObjects();
+            return FALSE;
+        }
+        // Clear all buffers
+        m_Buffers->Clear();
+    }
 
-   // Create view object
-   if (m_View && !*m_View && !m_View->Create())
-   {
-      DestroyObjects();
-      return FALSE;
-   }
+    // Create view object
+    if (m_View && !*m_View && !m_View->Create())
+    {
+        DestroyObjects();
+        return FALSE;
+    }
 
-   // Create transfer object
-   if (m_Xfer && !*m_Xfer && !m_Xfer->Create())
-   {
-      DestroyObjects();
-      return FALSE;
-   }
+    // Create transfer object
+    if (m_Xfer && !*m_Xfer && !m_Xfer->Create())
+    {
+        DestroyObjects();
+        return FALSE;
+    }
 
-   return TRUE;
+    return TRUE;
 }
 
 BOOL CGrabDemoDlg::DestroyObjects()
 {
-   // Destroy transfer object
-   if (m_Xfer && *m_Xfer) m_Xfer->Destroy();
+    // Destroy transfer object
+    if (m_Xfer && *m_Xfer) m_Xfer->Destroy();
 
-   // Destroy view object
-   if (m_View && *m_View) m_View->Destroy();
+    // Destroy view object
+    if (m_View && *m_View) m_View->Destroy();
 
-   // Destroy buffer object
-   if (m_Buffers && *m_Buffers) m_Buffers->Destroy();
+    // Destroy buffer object
+    if (m_Buffers && *m_Buffers) m_Buffers->Destroy();
 
-   // Destroy acquisition object
-   if (m_Acq && *m_Acq) m_Acq->Destroy();
+    // Destroy acquisition object
+    if (m_Acq && *m_Acq) m_Acq->Destroy();
 
-   return TRUE;
+    return TRUE;
 }
 
 //**********************************************************************************
@@ -392,89 +324,84 @@ BOOL CGrabDemoDlg::DestroyObjects()
 //**********************************************************************************
 void CGrabDemoDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
-   if(( nID & 0xFFF0) == IDM_ABOUTBOX)
-   {
-      CAboutDlg dlgAbout;
-      dlgAbout.DoModal();
-   }
-   else
-   {
-      CDialog::OnSysCommand(nID, lParam);
-   }
+    if ((nID & 0xFFF0) == IDM_ABOUTBOX)
+    {
+        CAboutDlg dlgAbout;
+        dlgAbout.DoModal();
+    }
+    else
+    {
+        CDialog::OnSysCommand(nID, lParam);
+    }
 }
 
 
 // If you add a minimize button to your dialog, you will need the code below
 //  to draw the icon.  For MFC applications using the document/view model,
 //  this is automatically done for you by the framework.
-void CGrabDemoDlg::OnPaint() 
+void CGrabDemoDlg::OnPaint()
 {
-   if( IsIconic())
-   {
-      CPaintDC dc(this); // device context for painting
+    if (IsIconic())
+    {
+        CPaintDC dc(this); // device context for painting
 
-      SendMessage(WM_ICONERASEBKGND, (WPARAM) dc.GetSafeHdc(), 0);
+        SendMessage(WM_ICONERASEBKGND, (WPARAM)dc.GetSafeHdc(), 0);
 
-      // Center icon in client rectangle
-      INT32 cxIcon = GetSystemMetrics(SM_CXICON);
-      INT32 cyIcon = GetSystemMetrics(SM_CYICON);
-      CRect rect;
-      GetClientRect(&rect);
-      INT32 x = (rect.Width() - cxIcon + 1) / 2;
-      INT32 y = (rect.Height() - cyIcon + 1) / 2;
+        // Center icon in client rectangle
+        INT32 cxIcon = GetSystemMetrics(SM_CXICON);
+        INT32 cyIcon = GetSystemMetrics(SM_CYICON);
+        CRect rect;
+        GetClientRect(&rect);
+        INT32 x = (rect.Width() - cxIcon + 1) / 2;
+        INT32 y = (rect.Height() - cyIcon + 1) / 2;
 
-      // Draw the icon
-      dc.DrawIcon(x, y, m_hIcon);
-   }
-   else
-   {
-      CDialog::OnPaint();
-   }
+        // Draw the icon
+        dc.DrawIcon(x, y, m_hIcon);
+    }
+    else
+    {
+        CDialog::OnPaint();
+    }
 }
 
-void CGrabDemoDlg::OnDestroy() 
+void CGrabDemoDlg::OnDestroy()
 {
     CDialog::OnDestroy();
 
-    // 安全清理
+    // 【新增：安全关闭文件】
     if (m_fpRaw)
     {
         fclose(m_fpRaw);
         m_fpRaw = NULL;
     }
-    if (m_pBigIOBuffer)
-    {
-        delete[] m_pBigIOBuffer;
-        m_pBigIOBuffer = NULL;
-    }
 
-   // Destroy all objects
-   DestroyObjects();
+    // Destroy all objects
+    DestroyObjects();
 
-   // Delete all objects
-   if (m_Xfer)			delete m_Xfer; 
-   if (m_View)			delete m_View; 
-   if (m_Buffers)		delete m_Buffers; 
-   if (m_Acq)			delete m_Acq; 
+    // Delete all objects
+    if (m_Xfer)			delete m_Xfer;
+    if (m_View)			delete m_View;
+    if (m_Buffers)		delete m_Buffers;
+    if (m_Acq)			delete m_Acq;
 }
 
-void CGrabDemoDlg::OnSize(UINT nType, int cx, int cy) 
+void CGrabDemoDlg::OnSize(UINT nType, int cx, int cy)
 {
-   CDialog::OnSize(nType, cx, cy);
+    CDialog::OnSize(nType, cx, cy);
 
-   CRect rClient;
-   GetClientRect(rClient);
+    CRect rClient;
+    GetClientRect(rClient);
 
-   // resize image viewer
-   if (m_ImageWnd.GetSafeHwnd())
-   {
-      CRect rWnd;
-      m_ImageWnd.GetWindowRect(rWnd);
-      ScreenToClient(rWnd);
-      rWnd.right = rClient.right - 5;
-      rWnd.bottom = rClient.bottom - 5;
-      m_ImageWnd.MoveWindow(rWnd);
-   }
+    // resize image viewer
+    if (m_ImageWnd.GetSafeHwnd())
+    {
+        CRect rWnd;
+        m_ImageWnd.GetWindowRect(rWnd);
+        ScreenToClient(rWnd);
+        rWnd.right = rClient.right - 5;
+        rWnd.bottom = rClient.bottom - 5;
+        m_ImageWnd.MoveWindow(rWnd);
+    }
 }
 
 
@@ -482,75 +409,75 @@ void CGrabDemoDlg::OnSize(UINT nType, int cx, int cy)
 //  the minimized window.
 HCURSOR CGrabDemoDlg::OnQueryDragIcon()
 {
-   return (HCURSOR) m_hIcon;
+    return (HCURSOR)m_hIcon;
 }
 
 
-void CGrabDemoDlg::OnExit() 
+void CGrabDemoDlg::OnExit()
 {
-   EndDialog(TRUE);
+    EndDialog(TRUE);
 }
 
 void CGrabDemoDlg::OnEndSession(BOOL bEnding)
 {
-   CDialog::OnEndSession(bEnding);
+    CDialog::OnEndSession(bEnding);
 
-   if( bEnding)
-   {
-      // If ending the session, free the resources.
-      OnDestroy(); 
-   }
+    if (bEnding)
+    {
+        // If ending the session, free the resources.
+        OnDestroy();
+    }
 }
 
 BOOL CGrabDemoDlg::OnQueryEndSession()
 {
-   if (!CDialog::OnQueryEndSession())
-      return FALSE;
+    if (!CDialog::OnQueryEndSession())
+        return FALSE;
 
-   return TRUE;
+    return TRUE;
 }
 
 //**************************************************************************************
 // Updates the menu items enabling/disabling the proper items depending on the state
 //  of the application
 //**************************************************************************************
-void CGrabDemoDlg::UpdateMenu( void)
+void CGrabDemoDlg::UpdateMenu(void)
 {
-   BOOL bAcqNoGrab	= m_Xfer && *m_Xfer && !m_Xfer->IsGrabbing();
-   BOOL bAcqGrab		= m_Xfer && *m_Xfer && m_Xfer->IsGrabbing();
-   BOOL bNoGrab		= !m_Xfer || !m_Xfer->IsGrabbing();
-   INT32	 scan = 0;
-   BOOL bLineScan    = m_Acq && m_Acq->GetParameter(CORACQ_PRM_SCAN, &scan) && (scan == CORACQ_VAL_SCAN_LINE);
-   INT32 iInterface = CORACQ_VAL_INTERFACE_DIGITAL;
-   if (m_Acq)
-      m_Acq->GetCapability(CORACQ_CAP_INTERFACE, (void *) &iInterface);
+    BOOL bAcqNoGrab = m_Xfer && *m_Xfer && !m_Xfer->IsGrabbing();
+    BOOL bAcqGrab = m_Xfer && *m_Xfer && m_Xfer->IsGrabbing();
+    BOOL bNoGrab = !m_Xfer || !m_Xfer->IsGrabbing();
+    INT32	 scan = 0;
+    BOOL bLineScan = m_Acq && m_Acq->GetParameter(CORACQ_PRM_SCAN, &scan) && (scan == CORACQ_VAL_SCAN_LINE);
+    INT32 iInterface = CORACQ_VAL_INTERFACE_DIGITAL;
+    if (m_Acq)
+        m_Acq->GetCapability(CORACQ_CAP_INTERFACE, (void*)&iInterface);
 
-   // Acquisition Control
-   GetDlgItem(IDC_GRAB)->EnableWindow(bAcqNoGrab);
-   GetDlgItem(IDC_SNAP)->EnableWindow(bAcqNoGrab);
-   GetDlgItem(IDC_FREEZE)->EnableWindow(bAcqGrab);
+    // Acquisition Control
+    GetDlgItem(IDC_GRAB)->EnableWindow(bAcqNoGrab);
+    GetDlgItem(IDC_SNAP)->EnableWindow(bAcqNoGrab);
+    GetDlgItem(IDC_FREEZE)->EnableWindow(bAcqGrab);
 
-   // Acquisition Options
-   GetDlgItem(IDC_GENERAL_OPTIONS)->EnableWindow(bAcqNoGrab);
-   GetDlgItem(IDC_AREA_SCAN_OPTIONS)->EnableWindow(bAcqNoGrab && !bLineScan);
-   GetDlgItem(IDC_LINE_SCAN_OPTIONS)->EnableWindow(bAcqNoGrab && bLineScan);
-   GetDlgItem(IDC_COMPOSITE_OPTIONS)->EnableWindow(bAcqNoGrab && (iInterface == CORACQ_VAL_INTERFACE_ANALOG) );
-   GetDlgItem(IDC_LOAD_ACQ_CONFIG)->EnableWindow(m_Xfer && !m_Xfer->IsGrabbing());
+    // Acquisition Options
+    GetDlgItem(IDC_GENERAL_OPTIONS)->EnableWindow(bAcqNoGrab);
+    GetDlgItem(IDC_AREA_SCAN_OPTIONS)->EnableWindow(bAcqNoGrab && !bLineScan);
+    GetDlgItem(IDC_LINE_SCAN_OPTIONS)->EnableWindow(bAcqNoGrab && bLineScan);
+    GetDlgItem(IDC_COMPOSITE_OPTIONS)->EnableWindow(bAcqNoGrab && (iInterface == CORACQ_VAL_INTERFACE_ANALOG));
+    GetDlgItem(IDC_LOAD_ACQ_CONFIG)->EnableWindow(m_Xfer && !m_Xfer->IsGrabbing());
 
-   // File Options
-   GetDlgItem(IDC_FILE_NEW)->EnableWindow(bNoGrab);
-   GetDlgItem(IDC_FILE_LOAD)->EnableWindow(bNoGrab);
-   GetDlgItem(IDC_FILE_SAVE)->EnableWindow(bNoGrab);
+    // File Options
+    GetDlgItem(IDC_FILE_NEW)->EnableWindow(bNoGrab);
+    GetDlgItem(IDC_FILE_LOAD)->EnableWindow(bNoGrab);
+    GetDlgItem(IDC_FILE_SAVE)->EnableWindow(bNoGrab);
 
-   // Image filter Options
-   GetDlgItem(IDC_IMAGE_FILTER_OPTIONS)->EnableWindow(bAcqNoGrab && m_Acq && *m_Acq && m_Acq->IsImageFilterAvailable());
+    // Image filter Options
+    GetDlgItem(IDC_IMAGE_FILTER_OPTIONS)->EnableWindow(bAcqNoGrab && m_Acq && *m_Acq && m_Acq->IsImageFilterAvailable());
 
-   // General Options
-   GetDlgItem(IDC_BUFFER_OPTIONS)->EnableWindow(bNoGrab);
+    // General Options
+    GetDlgItem(IDC_BUFFER_OPTIONS)->EnableWindow(bNoGrab);
 
-   // If last control was disabled, set default focus
-   if (!GetFocus())
-      GetDlgItem(IDC_EXIT)->SetFocus();
+    // If last control was disabled, set default focus
+    if (!GetFocus())
+        GetDlgItem(IDC_EXIT)->SetFocus();
 }
 
 
@@ -562,66 +489,97 @@ void CGrabDemoDlg::UpdateMenu( void)
 
 void CGrabDemoDlg::OnFreeze()
 {
-    m_Xfer->Freeze(); // 停止采集
+    if (m_Xfer->Freeze())
+    {
+        if (CAbortDlg(this, m_Xfer).DoModal() != IDOK)
+            m_Xfer->Abort();
 
-    // 停止线程
+        UpdateMenu();
+    }
+
+    // 【新增：关闭文件】
+    if (m_fpRaw)
+    {
+        fclose(m_fpRaw);
+        m_fpRaw = NULL;
+
+        CString strMsg;
+        strMsg.Format(_T("录制完成！共写入 %d 帧到 D:\\StreamTest.raw"), m_nFramesRecorded);
+        AfxMessageBox(strMsg);
+    }
     m_bIsRecording = FALSE;
-    SetEvent(m_hStopEvent);
-    WaitForSingleObject(m_hWorkerThread, INFINITE); // 等待线程写完
-
-    CloseHandle(m_hWorkerThread);
-    CloseHandle(m_hStopEvent);
-    CloseHandle(m_hDataAvailableEvent);
-
-    // 关闭文件
-    CloseHandle(m_hFileRaw);
-    m_hFileRaw = INVALID_HANDLE_VALUE;
-
-    CString str;
-    str.Format(_T("结束。已写入: %lld 帧。剩余未写: %d"), m_nFramesRecorded, m_nPoolLoad);
-    AfxMessageBox(str);
 }
 
 void CGrabDemoDlg::OnGrab()
 {
-    CFileDialog dlg(FALSE, _T(".raw"), _T("FastStream.raw"),
-        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("Raw Files|*.raw||"), this);
-    if (dlg.DoModal() != IDOK) return;
+    m_statusWnd.SetWindowText(_T(""));
 
-    // 1. 打开文件 (使用 Windows API 直接 IO，绕过系统缓存)
-    // FILE_FLAG_NO_BUFFERING: 不使用OS缓存，直接灌入SSD
-    // FILE_FLAG_WRITE_THROUGH: 确保写入到位
-    m_hFileRaw = CreateFile(dlg.GetPathName(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL);
+    // =========================================================
+    // 【新增功能：弹出文件选择对话框】
+    // =========================================================
 
-    if (m_hFileRaw == INVALID_HANDLE_VALUE) {
-        AfxMessageBox(_T("创建文件失败！")); return;
+    // 1. 定义对话框
+    // FALSE: 表示这是"保存(Save)"对话框，不是"打开(Open)"
+    // _T(".raw"): 默认文件后缀
+    // _T("StreamTest.raw"): 默认文件名
+    CFileDialog dlg(FALSE, _T(".raw"), _T("StreamTest.raw"),
+        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+        _T("Raw Files (*.raw)|*.raw|All Files (*.*)|*.*||"), this);
+
+    // 2. 显示对话框，等待用户选择
+    if (dlg.DoModal() == IDOK)
+    {
+        // 获取用户选择的完整路径（例如 E:\MyData\Test01.raw）
+        CString filePath = dlg.GetPathName();
+
+        // 3. 打开文件
+        // 使用 _tfopen 宏可以自动处理 Unicode 路径问题
+        m_fpRaw = _tfopen(filePath, _T("wb"));
+
+        if (m_fpRaw != NULL)
+        {
+            m_bIsRecording = TRUE;
+            m_nFramesRecorded = 0;
+
+            // 提示用户文件已创建
+            CString strMsg;
+            strMsg.Format(_T("即将写入: %s"), filePath);
+            m_statusWnd.SetWindowText(strMsg);
+        }
+        else
+        {
+            // 如果文件创建失败（比如盘符不存在或没权限）
+            AfxMessageBox(_T("无法创建文件！请检查路径或磁盘权限。"));
+            m_bIsRecording = FALSE;
+            return; // 直接返回，不开始采集
+        }
+    }
+    else
+    {
+        // 如果用户点击了“取消”，则什么都不做，直接返回
+        return;
     }
 
-    // 2. 启动后台写盘线程
-    m_hStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    m_hDataAvailableEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-    m_hWorkerThread = CreateThread(NULL, 0, WriteThreadEntry, this, 0, NULL);
-
-    // 3. 重置池子状态
-    m_iHead = 0; m_iTail = 0; m_nPoolLoad = 0;
-    m_nFramesRecorded = 0;
-    m_bIsRecording = TRUE;
-
-    m_Xfer->Grab();
+    // =========================================================
+    // 4. 开始采集 (和之前一样)
+    // =========================================================
+    if (m_Xfer->Grab())
+    {
+        UpdateMenu();
+    }
 }
 
-void CGrabDemoDlg::OnSnap() 
+void CGrabDemoDlg::OnSnap()
 {
-   m_statusWnd.SetWindowText(_T(""));
+    m_statusWnd.SetWindowText(_T(""));
 
-   if( m_Xfer->Snap())
-   {
-      if (CAbortDlg(this, m_Xfer).DoModal() != IDOK) 
-         m_Xfer->Abort();
+    if (m_Xfer->Snap())
+    {
+        if (CAbortDlg(this, m_Xfer).DoModal() != IDOK)
+            m_Xfer->Abort();
 
-      UpdateMenu();	
-   }
+        UpdateMenu();
+    }
 }
 
 
@@ -631,69 +589,69 @@ void CGrabDemoDlg::OnSnap()
 //
 //*****************************************************************************************
 
-void CGrabDemoDlg::OnGeneralOptions() 
+void CGrabDemoDlg::OnGeneralOptions()
 {
-   CAcqDlg dlg(this, m_Acq);
-   dlg.DoModal();
+    CAcqDlg dlg(this, m_Acq);
+    dlg.DoModal();
 }
 
-void CGrabDemoDlg::OnAreaScanOptions() 
+void CGrabDemoDlg::OnAreaScanOptions()
 {
-   CAScanDlg dlg(this, m_Acq);
-   dlg.DoModal();
+    CAScanDlg dlg(this, m_Acq);
+    dlg.DoModal();
 }
 
-void CGrabDemoDlg::OnLineScanOptions() 
+void CGrabDemoDlg::OnLineScanOptions()
 {
-   CLScanDlg dlg(this, m_Acq);
-   dlg.DoModal();
+    CLScanDlg dlg(this, m_Acq);
+    dlg.DoModal();
 }
 
-void CGrabDemoDlg::OnCompositeOptions() 
+void CGrabDemoDlg::OnCompositeOptions()
 {
-   if( m_Xfer->Snap())
-   {
-      CCompDlg dlg(this, m_Acq, m_Xfer);
-      dlg.DoModal();
+    if (m_Xfer->Snap())
+    {
+        CCompDlg dlg(this, m_Acq, m_Xfer);
+        dlg.DoModal();
 
-      UpdateMenu();
-   }
+        UpdateMenu();
+    }
 }
 
-void CGrabDemoDlg::OnLoadAcqConfig() 
+void CGrabDemoDlg::OnLoadAcqConfig()
 {
-   // Set acquisition parameters
-   CAcqConfigDlg dlg(this, m_Acq);
-   if (dlg.DoModal() == IDOK)
-   {
-      // Destroy objects
-      DestroyObjects();
+    // Set acquisition parameters
+    CAcqConfigDlg dlg(this, m_Acq);
+    if (dlg.DoModal() == IDOK)
+    {
+        // Destroy objects
+        DestroyObjects();
 
-      // Update acquisition object
-      SapAcquisition acq = *m_Acq;
-      *m_Acq = dlg.GetAcquisition();
+        // Update acquisition object
+        SapAcquisition acq = *m_Acq;
+        *m_Acq = dlg.GetAcquisition();
 
-      // Recreate objects
-      if (!CreateObjects())
-      {
-         *m_Acq = acq;
-         CreateObjects();
-      }
+        // Recreate objects
+        if (!CreateObjects())
+        {
+            *m_Acq = acq;
+            CreateObjects();
+        }
 
-      GetSignalStatus();
+        GetSignalStatus();
 
-      m_ImageWnd.Reset();
-      InvalidateRect(NULL);
-      UpdateWindow();
-      UpdateMenu();
-   }
+        m_ImageWnd.Reset();
+        InvalidateRect(NULL);
+        UpdateWindow();
+        UpdateMenu();
+    }
 }
 
 void CGrabDemoDlg::OnImageFilterOptions()
 {
-   CImageFilterEditorDlg dlg(m_Acq);
-   dlg.DoModal();
-   
+    CImageFilterEditorDlg dlg(m_Acq);
+    dlg.DoModal();
+
 }
 
 //*****************************************************************************************
@@ -702,37 +660,37 @@ void CGrabDemoDlg::OnImageFilterOptions()
 //
 //*****************************************************************************************
 
-void CGrabDemoDlg::OnBufferOptions() 
+void CGrabDemoDlg::OnBufferOptions()
 {
-   CBufDlg dlg(this, m_Buffers, m_View->GetDisplay());
-   if (dlg.DoModal() == IDOK)
-   {
-      // Destroy objects
-      DestroyObjects();
+    CBufDlg dlg(this, m_Buffers, m_View->GetDisplay());
+    if (dlg.DoModal() == IDOK)
+    {
+        // Destroy objects
+        DestroyObjects();
 
-      // Update buffer object
-      SapBuffer buf = *m_Buffers;
-      *m_Buffers = dlg.GetBuffer();
+        // Update buffer object
+        SapBuffer buf = *m_Buffers;
+        *m_Buffers = dlg.GetBuffer();
 
-      // Recreate objects
-      if (!CreateObjects())
-      {
-         *m_Buffers = buf;
-         CreateObjects();
-      }
+        // Recreate objects
+        if (!CreateObjects())
+        {
+            *m_Buffers = buf;
+            CreateObjects();
+        }
 
-      m_ImageWnd.Reset();
-      InvalidateRect(NULL);
-      UpdateWindow();
-      UpdateMenu();
-   }
+        m_ImageWnd.Reset();
+        InvalidateRect(NULL);
+        UpdateWindow();
+        UpdateMenu();
+    }
 }
 
-void CGrabDemoDlg::OnViewOptions() 
+void CGrabDemoDlg::OnViewOptions()
 {
-   CViewDlg dlg(this, m_View);
-   if( dlg.DoModal() == IDOK)
-      m_ImageWnd.Refresh();
+    CViewDlg dlg(this, m_View);
+    if (dlg.DoModal() == IDOK)
+        m_ImageWnd.Refresh();
 }
 
 //*****************************************************************************************
@@ -741,53 +699,52 @@ void CGrabDemoDlg::OnViewOptions()
 //
 //*****************************************************************************************
 
-void CGrabDemoDlg::OnFileNew() 
+void CGrabDemoDlg::OnFileNew()
 {
-   m_Buffers->Clear();
-   InvalidateRect( NULL, FALSE);
+    m_Buffers->Clear();
+    InvalidateRect(NULL, FALSE);
 }
 
-void CGrabDemoDlg::OnFileLoad() 
+void CGrabDemoDlg::OnFileLoad()
 {
-   CLoadSaveDlg dlg(this, m_Buffers, TRUE);
-   if (dlg.DoModal() == IDOK)
-   {
-      InvalidateRect(NULL);
-      UpdateWindow();
-   }
+    CLoadSaveDlg dlg(this, m_Buffers, TRUE);
+    if (dlg.DoModal() == IDOK)
+    {
+        InvalidateRect(NULL);
+        UpdateWindow();
+    }
 }
 
-void CGrabDemoDlg::OnFileSave() 
+void CGrabDemoDlg::OnFileSave()
 {
-   CLoadSaveDlg dlg(this, m_Buffers, FALSE);
-   dlg.DoModal();
+    CLoadSaveDlg dlg(this, m_Buffers, FALSE);
+    dlg.DoModal();
 }
 
 void CGrabDemoDlg::GetSignalStatus()
 {
-   SapAcquisition::SignalStatus signalStatus;
+    SapAcquisition::SignalStatus signalStatus;
 
-   if (m_Acq && m_Acq->IsSignalStatusAvailable())
-   {
-      if (m_Acq->GetSignalStatus(&signalStatus, SignalCallback, this))
-         GetSignalStatus(signalStatus);
-   }
+    if (m_Acq && m_Acq->IsSignalStatusAvailable())
+    {
+        if (m_Acq->GetSignalStatus(&signalStatus, SignalCallback, this))
+            GetSignalStatus(signalStatus);
+    }
 }
 
 void CGrabDemoDlg::GetSignalStatus(SapAcquisition::SignalStatus signalStatus)
 {
-   m_IsSignalDetected = (signalStatus != SapAcquisition::SignalNone);
+    m_IsSignalDetected = (signalStatus != SapAcquisition::SignalNone);
 
-   if (m_IsSignalDetected)
-      SetWindowText(m_appTitle);
-   else
-   {
-      CString newTitle = m_appTitle;
-      newTitle += " (No camera signal detected)";
-      SetWindowText(newTitle);
-   }
+    if (m_IsSignalDetected)
+        SetWindowText(m_appTitle);
+    else
+    {
+        CString newTitle = m_appTitle;
+        newTitle += " (No camera signal detected)";
+        SetWindowText(newTitle);
+    }
 }
-
 
 
 
