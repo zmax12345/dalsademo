@@ -79,6 +79,7 @@ CGrabDemoDlg::CGrabDemoDlg(CWnd* pParent /*=NULL*/)
     m_fpRaw = NULL;
     m_bIsRecording = FALSE;
     m_nFramesRecorded = 0;
+    m_strLogPath = _T("");
 }
 
 void CGrabDemoDlg::DoDataExchange(CDataExchange* pDX)
@@ -120,38 +121,49 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CGrabDemoDlg message handlers
 
+// =========================================================
+// 【XferCallback】核心回调
+// =========================================================
 void CGrabDemoDlg::XferCallback(SapXferCallbackInfo* pInfo)
 {
     CGrabDemoDlg* pDlg = (CGrabDemoDlg*)pInfo->GetContext();
 
-    // If grabbing in trash buffer, do not display the image, update the
-    // appropriate number of frames on the status bar instead
+    // 1. 检查丢帧 (Trash Buffer)
     if (pInfo->IsTrash())
     {
+        int trashCount = pInfo->GetEventCount();
+
         CString str;
-        str.Format(_T("Frames acquired in trash buffer: %d"), pInfo->GetEventCount());
+        str.Format(_T("Frames acquired in trash buffer: %d"), trashCount);
         pDlg->m_statusWnd.SetWindowText(str);
+
+        // 【核心修改】如果在录制中，记录丢帧日志
+        if (pDlg->m_bIsRecording)
+        {
+            pDlg->WriteTrashLog(trashCount, pDlg->m_nFramesRecorded);
+        }
+        return; // 丢帧时不处理图像
     }
 
-    // Refresh view
+    // 2. 正常处理
     else
     {
         pDlg->m_View->Show();
-        // 【新增：高速写入硬盘逻辑】
+
         if (pDlg->m_bIsRecording && pDlg->m_fpRaw)
         {
-            // 1. 获取图像尺寸 (宽 * 高 * 字节数)
+            // 获取图像参数
             int width = pDlg->m_Buffers->GetWidth();
             int height = pDlg->m_Buffers->GetHeight();
             int bytesPerPixel = pDlg->m_Buffers->GetBytesPerPixel();
             int size = width * height * bytesPerPixel;
 
-            // 2. 获取当前帧的数据指针
+            // 获取数据指针
             void* pData = NULL;
-            int bufIndex = pDlg->m_Buffers->GetIndex(); // 获取当前最新的缓冲区索引
+            int bufIndex = pDlg->m_Buffers->GetIndex();
             pDlg->m_Buffers->GetAddress(bufIndex, &pData);
 
-            // 3. 写入硬盘
+            // 写入硬盘
             if (pData != NULL)
             {
                 size_t written = fwrite(pData, 1, size, pDlg->m_fpRaw);
@@ -159,8 +171,7 @@ void CGrabDemoDlg::XferCallback(SapXferCallbackInfo* pInfo)
                 {
                     pDlg->m_nFramesRecorded++;
 
-                    // (可选) 更新状态栏显示录制进度
-                    // 注意：频繁更新界面会降低性能，这里每100帧更新一次
+                    // 更新状态栏 (每100帧一次，防止卡顿)
                     if (pDlg->m_nFramesRecorded % 100 == 0)
                     {
                         CString strStatus;
@@ -170,6 +181,30 @@ void CGrabDemoDlg::XferCallback(SapXferCallbackInfo* pInfo)
                 }
             }
         }
+    }
+}
+
+// =========================================================
+// 【新增函数】写日志到 Log.txt
+// =========================================================
+void CGrabDemoDlg::WriteTrashLog(int trashCount, int currentFrame)
+{
+    // 如果没有日志路径，直接返回
+    if (m_strLogPath.IsEmpty()) return;
+
+    // 以追加模式(a+)打开
+    FILE* fp = _tfopen(m_strLogPath, _T("a+"));
+    if (fp)
+    {
+        // 获取当前毫秒级时间
+        SYSTEMTIME st;
+        GetLocalTime(&st);
+
+        // 写入格式: [HH:MM:SS.mmm] 丢帧警告! 发生在第 X 帧. Trash总数: Y
+        _ftprintf(fp, _T("[%02d:%02d:%02d.%03d] 丢帧警告! 发生在第 %d 帧. Trash总数: %d\n"),
+            st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, currentFrame, trashCount);
+
+        fclose(fp);
     }
 }
 
@@ -230,7 +265,10 @@ BOOL CGrabDemoDlg::OnInitDialog()
     {
         // Define on-line objects
         m_Acq = new SapAcquisition(dlg.GetAcquisition());
+
+        // 【关键配置】申请2000个缓冲区，利用大内存抗住SSD抖动
         m_Buffers = new SapBufferWithTrash(2000, m_Acq);
+
         m_Xfer = new SapAcqToBuf(m_Acq, m_Buffers, XferCallback, this);
     }
     else
@@ -504,7 +542,7 @@ void CGrabDemoDlg::OnFreeze()
         m_fpRaw = NULL;
 
         CString strMsg;
-        strMsg.Format(_T("录制完成！共写入 %d 帧到 D:\\StreamTest.raw"), m_nFramesRecorded);
+        strMsg.Format(_T("录制完成！共写入 %d 帧到文件"), m_nFramesRecorded);
         AfxMessageBox(strMsg);
     }
     m_bIsRecording = FALSE;
@@ -515,25 +553,27 @@ void CGrabDemoDlg::OnGrab()
     m_statusWnd.SetWindowText(_T(""));
 
     // =========================================================
-    // 【新增功能：弹出文件选择对话框】
+    // 【文件选择对话框】
     // =========================================================
-
-    // 1. 定义对话框
-    // FALSE: 表示这是"保存(Save)"对话框，不是"打开(Open)"
-    // _T(".raw"): 默认文件后缀
-    // _T("StreamTest.raw"): 默认文件名
     CFileDialog dlg(FALSE, _T(".raw"), _T("StreamTest.raw"),
         OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
         _T("Raw Files (*.raw)|*.raw|All Files (*.*)|*.*||"), this);
 
-    // 2. 显示对话框，等待用户选择
     if (dlg.DoModal() == IDOK)
     {
-        // 获取用户选择的完整路径（例如 E:\MyData\Test01.raw）
+        // 1. 获取用户选择的RAW文件路径
         CString filePath = dlg.GetPathName();
 
+        // 2. 自动生成 Log 文件路径
+        // 例如 filePath = "D:\\Data\\Test.raw"
+        // 自动 Log = "D:\\Data\\Test_Log.txt"
+        m_strLogPath = filePath;
+        int dotPos = m_strLogPath.ReverseFind('.');
+        if (dotPos != -1)
+            m_strLogPath = m_strLogPath.Left(dotPos); // 去掉 .raw
+        m_strLogPath += _T("_Log.txt");               // 加上后缀
+
         // 3. 打开文件
-        // 使用 _tfopen 宏可以自动处理 Unicode 路径问题
         m_fpRaw = _tfopen(filePath, _T("wb"));
 
         if (m_fpRaw != NULL)
@@ -541,28 +581,31 @@ void CGrabDemoDlg::OnGrab()
             m_bIsRecording = TRUE;
             m_nFramesRecorded = 0;
 
-            // 提示用户文件已创建
+            // 提示用户
             CString strMsg;
-            strMsg.Format(_T("即将写入: %s"), filePath);
+            strMsg.Format(_T("即将写入: %s (日志: %s)"), filePath, m_strLogPath);
             m_statusWnd.SetWindowText(strMsg);
+
+            // 写入一个开始标记到日志
+            FILE* fpLog = _tfopen(m_strLogPath, _T("w"));
+            if (fpLog) {
+                _ftprintf(fpLog, _T("=== 开始录制 ===\n"));
+                fclose(fpLog);
+            }
         }
         else
         {
-            // 如果文件创建失败（比如盘符不存在或没权限）
             AfxMessageBox(_T("无法创建文件！请检查路径或磁盘权限。"));
             m_bIsRecording = FALSE;
-            return; // 直接返回，不开始采集
+            return;
         }
     }
     else
     {
-        // 如果用户点击了“取消”，则什么都不做，直接返回
         return;
     }
 
-    // =========================================================
-    // 4. 开始采集 (和之前一样)
-    // =========================================================
+    // 4. 开始采集
     if (m_Xfer->Grab())
     {
         UpdateMenu();
@@ -745,6 +788,4 @@ void CGrabDemoDlg::GetSignalStatus(SapAcquisition::SignalStatus signalStatus)
         SetWindowText(newTitle);
     }
 }
-
-
 

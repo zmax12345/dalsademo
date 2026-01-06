@@ -54,10 +54,17 @@ protected:
 
 	BOOL m_IsSignalDetected;   // TRUE if camera signal is detected
 
-	// 【新增部分：流盘变量】
+	// ==========================================
+	// 【变量】流盘与日志
+	// ==========================================
 	FILE* m_fpRaw;             // 文件指针
 	BOOL  m_bIsRecording;      // 是否正在录制
 	int   m_nFramesRecorded;   // 已录制帧数
+
+	CString m_strLogPath;      // 日志文件路径
+
+	// 【修改】增加参数: currentFrame
+	void WriteTrashLog(int trashCount, int currentFrame);
 
 	// Generated message map functions
 	//{{AFX_MSG(CGrabDemoDlg)
